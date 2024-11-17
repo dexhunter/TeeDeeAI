@@ -31,7 +31,14 @@ Analytics & Insights: Provide data for creators on model performance and user en
 
 ## How to Run
 
-Use uv to sync the project.
+
+1. Run the TEE Remote Attestation Simulator:
+
+```bash
+docker run --rm -p 8090:8090 phalanetwork/tappd-simulator:latest
+```
+
+2. Use uv to sync the project and run the app
 ```bash
 uv venv
 source .venv/bin/activate
