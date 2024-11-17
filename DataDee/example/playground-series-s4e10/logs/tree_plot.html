@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en"> 
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      id="p5scripttag"
+      src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+      integrity="sha512-uaz5GpnQoE6t5echKlX8P52czvsIGgLPcvlzfvRubLZ1Hp8JemUDnbUiAahbVtPb+jUVrNETuXvAhDDF/N3M4w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+    <script>
+      const bgCol = "#F2F0E7";
+const accentCol = "#fd4578";
+
+hljs.initHighlightingOnLoad();
+
+const updateTargetDims = () => {
+  // width is max-width of `.contentContainer` - its padding
+  // return [min(windowWidth, 900 - 80), 700]
+  return [windowWidth * (1 / 2), windowHeight];
+};
+
+const setCodeAndPlan = (code, plan) => {
+  const codeElm = document.getElementById("code");
+  if (codeElm) {
+    // codeElm.innerText = code;
+    codeElm.innerHTML = hljs.highlight(code, { language: "python" }).value;
+  }
+
+  const planElm = document.getElementById("plan");
+  if (planElm) {
+    // planElm.innerText = plan.trim();
+    planElm.innerHTML = hljs.highlight(plan, { language: "plaintext" }).value;
+  }
+};
+
+windowResized = () => {
+  resizeCanvas(...updateTargetDims());
+  awaitingPostResizeOps = true;
+};
+
+const animEase = (t) => 1 - (1 - Math.min(t, 1.0)) ** 5;
+
+// ---- global constants ----
+
+const globalAnimSpeed = 1.1;
+const scaleFactor = 0.57;
+
+// ---- global vars ----
+
+let globalTime = 0;
+let manualSelection = false;
+
+let currentElemInd = 0;
+
+let treeStructData = {"edges": [[4, 5], [5, 7], [5, 8], [5, 6], [8, 9]], "layout": [[0.0, 0.0], [0.2, 0.0], [0.4, 0.0], [0.6, 0.0], [0.8, 0.0], [0.8, 0.33333333333333337], [0.6, 0.6666666666666667], [0.8, 0.6666666666666667], [1.0, 0.6666666666666667], [1.0, 1.0]], "plan": ["To tackle the loan approval prediction task, I will use a Logistic Regression\nmodel due to its effectiveness in binary classification problems and its\ninterpretability. The data will be preprocessed to handle categorical variables\nusing one-hot encoding and to scale numerical features for better model\nperformance. I will split the training data into a training set and a validation\nset to evaluate the model using the AUC score, which is suitable for binary\nclassification tasks. Finally, predictions will be made on the test set and\nsaved to a 'submission.csv' file.", "For this loan approval prediction task, I propose using a Random Forest\nclassifier due to its robustness and ability to handle both continuous and\ncategorical variables effectively. The Random Forest model can also manage\noverfitting better than many other classifiers. The data will be processed using\none-hot encoding for categorical variables and scaling for numerical features. I\nwill use a 5-fold cross-validation approach to evaluate the model's performance\nusing the AUC score since it is a suitable metric for binary classification\nproblems. Predictions will be made on the test set and saved to a\n'submission.csv' file.", "For this loan approval prediction task, I will use a Support Vector Machine\n(SVM) classifier with a linear kernel due to its capability in handling high-\ndimensional spaces and binary classification problems. The SVM is particularly\ngood when there is a clear margin of separation in the data. I will preprocess\nthe data by encoding categorical variables using one-hot encoding and scaling\nnumerical features to ensure they contribute equally to the model's decision\nprocess. The model's performance will be evaluated using the AUC score, which is\nappropriate for binary classification tasks. Predictions will be computed for\nthe test dataset and saved to a 'submission.csv' file in the \"./working\"\ndirectory.", "For the loan approval prediction task, I plan to utilize a Decision Tree\nClassifier due to its simplicity and interpretability. Decision Trees are\ncapable of handling both numerical and categorical data, making them suitable\nfor datasets with diverse feature types. I will preprocess the data by encoding\ncategorical variables using one-hot encoding and scale numerical features to\nensure uniform influence on the model. The model's performance will be evaluated\nusing the AUC score, which is a robust metric for binary classification\nproblems. Predictions will be generated for the test dataset and saved to a\n'submission.csv' file in the \"./working\" directory.", "For the loan approval prediction task, I will employ a Gradient Boosting Machine\n(GBM) model using the `lightGBM` library, which is known for its efficiency and\neffectiveness in handling tabular data for classification tasks. Gradient\nBoosting is a powerful technique that builds models sequentially to minimize\nerrors from previous models, making it suitable for this binary classification\nproblem. I will preprocess the data by encoding categorical variables using one-\nhot encoding and scale numerical features. The model's performance will be\nevaluated using the AUC score, which is appropriate for binary classification.\nPredictions will be made on the test set and saved to a 'submission.csv' file.", "To improve the predictive performance of the LightGBM model, I propose tuning\nthe hyperparameters of the classifier. Specifically, we can adjust the\n`num_leaves` and `max_depth` parameters, which control the complexity of the\nmodel and can help in handling overfitting or underfitting. Increasing\n`num_leaves` allows the model to learn more detailed data patterns, and\nadjusting `max_depth` helps control the depth of the tree, thereby managing\nmodel complexity. I will use a grid search approach to explore a range of values\nfor these parameters and select the best combination based on the AUC score\nusing cross-validation.", "To further improve the predictive performance of the LightGBM model, we can\nexplore feature engineering techniques such as interaction terms between\nsignificant features. This approach may uncover more complex relationships in\nthe data that simple models or un-engineered features might miss. Specifically,\nwe can create interaction terms based on domain knowledge or based on the\nimportance scores from the initial model runs. These new features will then be\nincluded in the model training process to see if they enhance the model's\nability to predict loan approval status.", "To further improve the predictive performance of the LightGBM model, I propose\nadjusting the learning rate and increasing the number of estimators. A lower\nlearning rate can make the model training more robust at the expense of needing\nmore trees to converge. This adjustment can potentially lead to better\ngeneralization on unseen data. I will explore a range of learning rates and\nincrease the number of estimators in the grid search to find the optimal\ncombination. This approach aims to refine the balance between learning speed and\nmodel accuracy, potentially enhancing the AUC score.", "To further improve the predictive performance of the LightGBM model, I suggest\nfocusing on feature engineering, specifically by adding interaction terms\nbetween significant features. Interaction terms can provide additional\ninformation that is not captured by individual features alone, potentially\nimproving the model's ability to capture complex patterns in the data. This\napproach can be particularly beneficial in boosting models like LightGBM, which\nthrive on structured data. We will select a few key features based on domain\nknowledge or preliminary feature importance, create interaction terms, and\ninclude these in the model to see if there's an improvement in the AUC score.", "To enhance the predictive performance of the LightGBM model, I propose focusing\non feature selection to reduce overfitting and improve generalization on unseen\ndata. Feature selection can be achieved by using feature importance scores from\na preliminary LightGBM model to identify and retain only the most impactful\nfeatures. By reducing the dimensionality of the feature space, the model can\npotentially train more efficiently and effectively, leading to better validation\nperformance. This approach will involve fitting an initial LightGBM model to\ndetermine feature importance, selecting a subset of features based on their\nimportance, and then training the final model using only these selected\nfeatures."], "code": ["import pandas as pd\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.preprocessing import OneHotEncoder, StandardScaler\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.metrics import roc_auc_score\n\n# Load data\ntrain_data = pd.read_csv(\"./input/train.csv\")\ntest_data = pd.read_csv(\"./input/test.csv\")\n\n# Separate features and target\nX = train_data.drop([\"loan_status\", \"id\"], axis=1)\ny = train_data[\"loan_status\"]\n\n# Preprocessing for numerical data\nnumerical_cols = [\n    cname for cname in X.columns if X[cname].dtype in [\"int64\", \"float64\"]\n]\nnumerical_transformer = StandardScaler()\n\n# Preprocessing for categorical data\ncategorical_cols = [cname for cname in X.columns if X[cname].dtype == \"object\"]\ncategorical_transformer = OneHotEncoder(handle_unknown=\"ignore\")\n\n# Bundle preprocessing for numerical and categorical data\npreprocessor = ColumnTransformer(\n    transformers=[\n        (\"num\", numerical_transformer, numerical_cols),\n        (\"cat\", categorical_transformer, categorical_cols),\n    ]\n)\n\n# Define the model\nmodel = LogisticRegression(max_iter=1000)\n\n# Create and evaluate the pipeline\npipeline = Pipeline(steps=[(\"preprocessor\", preprocessor), (\"model\", model)])\n\n# Split data into train and validation subsets\nX_train, X_valid, y_train, y_valid = train_test_split(\n    X, y, test_size=0.2, random_state=0\n)\n\npipeline.fit(X_train, y_train)\npreds = pipeline.predict_proba(X_valid)[:, 1]\nauc_score = roc_auc_score(y_valid, preds)\nprint(f\"AUC Score: {auc_score}\")\n\n# Predicting on test data\ntest_X = test_data.drop(\"id\", axis=1)\ntest_preds = pipeline.predict_proba(test_X)[:, 1]\n\n# Save the predictions to a CSV file\noutput = pd.DataFrame({\"id\": test_data.id, \"loan_status\": test_preds})\noutput.to_csv(\"./working/submission.csv\", index=False)\n", "import pandas as pd\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.model_selection import train_test_split, cross_val_score\nfrom sklearn.preprocessing import OneHotEncoder, StandardScaler\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.metrics import roc_auc_score\n\n# Load the data\ntrain_data = pd.read_csv(\"./input/train.csv\")\ntest_data = pd.read_csv(\"./input/test.csv\")\n\n# Separate features and target\nX = train_data.drop([\"loan_status\", \"id\"], axis=1)\ny = train_data[\"loan_status\"]\nX_test = test_data.drop(\"id\", axis=1)\n\n# Preprocessing for numerical data\nnumerical_cols = [\n    cname for cname in X.columns if X[cname].dtype in [\"int64\", \"float64\"]\n]\nnumerical_transformer = StandardScaler()\n\n# Preprocessing for categorical data\ncategorical_cols = [cname for cname in X.columns if X[cname].dtype == \"object\"]\ncategorical_transformer = OneHotEncoder(handle_unknown=\"ignore\")\n\n# Bundle preprocessing for numerical and categorical data\npreprocessor = ColumnTransformer(\n    transformers=[\n        (\"num\", numerical_transformer, numerical_cols),\n        (\"cat\", categorical_transformer, categorical_cols),\n    ]\n)\n\n# Define the model\nmodel = RandomForestClassifier(n_estimators=100, random_state=0)\n\n# Create and evaluate the pipeline\npipeline = Pipeline(steps=[(\"preprocessor\", preprocessor), (\"model\", model)])\n\n# Cross-validation AUC score\ncv_scores = cross_val_score(pipeline, X, y, cv=5, scoring=\"roc_auc\")\nprint(f\"Mean AUC Score: {cv_scores.mean()}\")\n\n# Fit the model\npipeline.fit(X, y)\n\n# Generate test predictions\ntest_preds = pipeline.predict_proba(X_test)[:, 1]\n\n# Save the predictions to a CSV file\noutput = pd.DataFrame({\"id\": test_data.id, \"loan_status\": test_preds})\noutput.to_csv(\"./working/submission.csv\", index=False)\n", "import pandas as pd\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.preprocessing import StandardScaler, OneHotEncoder\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.svm import SVC\nfrom sklearn.metrics import roc_auc_score\n\n# Load data\ntrain_data = pd.read_csv(\"./input/train.csv\")\ntest_data = pd.read_csv(\"./input/test.csv\")\n\n# Separate features and target\nX = train_data.drop(columns=[\"loan_status\", \"id\"])\ny = train_data[\"loan_status\"]\nX_test = test_data.drop(columns=[\"id\"])\n\n# Preprocessing for numerical data\nnumerical_features = X.select_dtypes(include=[\"int64\", \"float64\"]).columns\nnumerical_transformer = StandardScaler()\n\n# Preprocessing for categorical data\ncategorical_features = X.select_dtypes(include=[\"object\"]).columns\ncategorical_transformer = OneHotEncoder(handle_unknown=\"ignore\")\n\n# Bundle preprocessing for numerical and categorical data\npreprocessor = ColumnTransformer(\n    transformers=[\n        (\"num\", numerical_transformer, numerical_features),\n        (\"cat\", categorical_transformer, categorical_features),\n    ]\n)\n\n# Define the model\nmodel = SVC(kernel=\"linear\", probability=True, random_state=0)\n\n# Create and evaluate the pipeline\npipeline = Pipeline(steps=[(\"preprocessor\", preprocessor), (\"model\", model)])\n\n# Split data into train and validation sets\nX_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=0)\n\n# Training the model\npipeline.fit(X_train, y_train)\n\n# Predicting on validation set\nval_predictions = pipeline.predict_proba(X_val)[:, 1]\nval_auc = roc_auc_score(y_val, val_predictions)\n\n# Output the AUC score\nprint(f\"Validation AUC: {val_auc}\")\n\n# Predict on test data\ntest_predictions = pipeline.predict_proba(X_test)[:, 1]\n\n# Save the predictions to a csv file\noutput = pd.DataFrame({\"id\": test_data.id, \"loan_status\": test_predictions})\noutput.to_csv(\"./working/submission.csv\", index=False)\n", "import pandas as pd\nfrom sklearn.tree import DecisionTreeClassifier\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import roc_auc_score\nfrom sklearn.preprocessing import StandardScaler, OneHotEncoder\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.pipeline import Pipeline\n\n# Load the data\ntrain_data = pd.read_csv(\"./input/train.csv\")\ntest_data = pd.read_csv(\"./input/test.csv\")\n\n# Separate features and target\nX = train_data.drop([\"loan_status\", \"id\"], axis=1)\ny = train_data[\"loan_status\"]\nX_test = test_data.drop([\"id\"], axis=1)\n\n# Preprocessing for numerical data\nnumerical_cols = [\n    cname for cname in X.columns if X[cname].dtype in [\"int64\", \"float64\"]\n]\nnumerical_transformer = StandardScaler()\n\n# Preprocessing for categorical data\ncategorical_cols = [cname for cname in X.columns if X[cname].dtype == \"object\"]\ncategorical_transformer = OneHotEncoder(handle_unknown=\"ignore\")\n\n# Bundle preprocessing for numerical and categorical data\npreprocessor = ColumnTransformer(\n    transformers=[\n        (\"num\", numerical_transformer, numerical_cols),\n        (\"cat\", categorical_transformer, categorical_cols),\n    ]\n)\n\n# Define the model\nmodel = DecisionTreeClassifier()\n\n# Create and evaluate the pipeline\npipeline = Pipeline(steps=[(\"preprocessor\", preprocessor), (\"model\", model)])\n\n# Split data into train and validation subsets\nX_train, X_valid, y_train, y_valid = train_test_split(\n    X, y, train_size=0.8, test_size=0.2, random_state=0\n)\n\npipeline.fit(X_train, y_train)\npreds = pipeline.predict_proba(X_valid)[:, 1]\n\n# Calculate AUC score\nauc_score = roc_auc_score(y_valid, preds)\nprint(f\"Validation AUC: {auc_score}\")\n\n# Generate test predictions\ntest_preds = pipeline.predict_proba(X_test)[:, 1]\noutput = pd.DataFrame({\"id\": test_data.id, \"loan_status\": test_preds})\noutput.to_csv(\"./working/submission.csv\", index=False)\n", "import pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.preprocessing import OneHotEncoder, StandardScaler\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.metrics import roc_auc_score\nimport lightgbm as lgb\n\n# Load data\ntrain_data = pd.read_csv(\"./input/train.csv\")\ntest_data = pd.read_csv(\"./input/test.csv\")\n\n# Separate features and target\nX = train_data.drop([\"loan_status\", \"id\"], axis=1)\ny = train_data[\"loan_status\"]\nX_test = test_data.drop(\"id\", axis=1)\n\n# Define categorical and numerical features\ncategorical_features = X.select_dtypes(include=[\"object\"]).columns.tolist()\nnumerical_features = X.select_dtypes(exclude=[\"object\"]).columns.tolist()\n\n# Create preprocessing pipelines\npreprocessor = ColumnTransformer(\n    transformers=[\n        (\"num\", StandardScaler(), numerical_features),\n        (\"cat\", OneHotEncoder(handle_unknown=\"ignore\"), categorical_features),\n    ]\n)\n\n# Define the model\nmodel = lgb.LGBMClassifier()\n\n# Create and fit the pipeline\npipeline = Pipeline(steps=[(\"preprocessor\", preprocessor), (\"classifier\", model)])\n\n# Split data into train and validation sets\nX_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)\n\n# Fit model\npipeline.fit(X_train, y_train)\n\n# Predict on validation set\ny_pred = pipeline.predict_proba(X_val)[:, 1]\n\n# Calculate AUC\nauc_score = roc_auc_score(y_val, y_pred)\nprint(f\"Validation AUC: {auc_score}\")\n\n# Predict on test set\ntest_preds = pipeline.predict_proba(X_test)[:, 1]\n\n# Save predictions to submission.csv\nsubmission = pd.DataFrame({\"id\": test_data[\"id\"], \"loan_status\": test_preds})\nsubmission.to_csv(\"./working/submission.csv\", index=False)\n", "import pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import train_test_split, GridSearchCV\nfrom sklearn.preprocessing import OneHotEncoder, StandardScaler\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.metrics import roc_auc_score, make_scorer\nimport lightgbm as lgb\n\n# Load data\ntrain_data = pd.read_csv(\"./input/train.csv\")\ntest_data = pd.read_csv(\"./input/test.csv\")\n\n# Separate features and target\nX = train_data.drop([\"loan_status\", \"id\"], axis=1)\ny = train_data[\"loan_status\"]\nX_test = test_data.drop(\"id\", axis=1)\n\n# Define categorical and numerical features\ncategorical_features = X.select_dtypes(include=[\"object\"]).columns.tolist()\nnumerical_features = X.select_dtypes(exclude=[\"object\"]).columns.tolist()\n\n# Create preprocessing pipelines\npreprocessor = ColumnTransformer(\n    transformers=[\n        (\"num\", StandardScaler(), numerical_features),\n        (\"cat\", OneHotEncoder(handle_unknown=\"ignore\"), categorical_features),\n    ]\n)\n\n# Define the model\nmodel = lgb.LGBMClassifier()\n\n# Create and fit the pipeline\npipeline = Pipeline(steps=[(\"preprocessor\", preprocessor), (\"classifier\", model)])\n\n# Parameters grid\nparam_grid = {\n    \"classifier__num_leaves\": [31, 50, 70],\n    \"classifier__max_depth\": [10, 20, 30],\n}\n\n# Grid search with cross-validation\ngrid_search = GridSearchCV(\n    pipeline, param_grid, cv=5, scoring=make_scorer(roc_auc_score, needs_proba=True)\n)\n\n# Fit grid search\ngrid_search.fit(X, y)\n\n# Best model\nbest_pipeline = grid_search.best_estimator_\n\n# Predict on validation set\ny_pred = best_pipeline.predict_proba(X)[:, 1]\n\n# Calculate AUC\nauc_score = roc_auc_score(y, y_pred)\nprint(f\"Best GridSearch AUC: {auc_score}\")\n\n# Predict on test set\ntest_preds = best_pipeline.predict_proba(X_test)[:, 1]\n\n# Save predictions to submission.csv\nsubmission = pd.DataFrame({\"id\": test_data[\"id\"], \"loan_status\": test_preds})\nsubmission.to_csv(\"./working/submission.csv\", index=False)\n", "import pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import train_test_split, GridSearchCV\nfrom sklearn.preprocessing import OneHotEncoder, StandardScaler\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.metrics import roc_auc_score, make_scorer\nimport lightgbm as lgb\n\n# Load data\ntrain_data = pd.read_csv(\"./input/train.csv\")\ntest_data = pd.read_csv(\"./input/test.csv\")\n\n# Separate features and target\nX = train_data.drop([\"loan_status\", \"id\"], axis=1)\ny = train_data[\"loan_status\"]\nX_test = test_data.drop(\"id\", axis=1)\n\n# Define categorical and numerical features\ncategorical_features = X.select_dtypes(include=[\"object\"]).columns.tolist()\nnumerical_features = X.select_dtypes(exclude=[\"object\"]).columns.tolist()\n\n# Adding interaction terms\nX[\"interaction_term\"] = X[\"feature1\"] * X[\"feature2\"]  # Hypothetical interaction\nX_test[\"interaction_term\"] = (\n    X_test[\"feature1\"] * X_test[\"feature2\"]\n)  # Same for test set\n\n# Update feature lists\nnumerical_features.append(\"interaction_term\")\n\n# Create preprocessing pipelines\npreprocessor = ColumnTransformer(\n    transformers=[\n        (\"num\", StandardScaler(), numerical_features),\n        (\"cat\", OneHotEncoder(handle_unknown=\"ignore\"), categorical_features),\n    ]\n)\n\n# Define the model\nmodel = lgb.LGBMClassifier()\n\n# Create and fit the pipeline\npipeline = Pipeline(steps=[(\"preprocessor\", preprocessor), (\"classifier\", model)])\n\n# Parameters grid\nparam_grid = {\n    \"classifier__num_leaves\": [31, 50, 70],\n    \"classifier__max_depth\": [10, 20, 30],\n}\n\n# Grid search with cross-validation\ngrid_search = GridSearchCV(\n    pipeline, param_grid, cv=5, scoring=make_scorer(roc_auc_score, needs_proba=True)\n)\n\n# Fit grid search\ngrid_search.fit(X, y)\n\n# Best model\nbest_pipeline = grid_search.best_estimator_\n\n# Predict on validation set\ny_pred = best_pipeline.predict_proba(X)[:, 1]\n\n# Calculate AUC\nauc_score = roc_auc_score(y, y_pred)\nprint(f\"Best GridSearch AUC with Feature Engineering: {auc_score}\")\n\n# Predict on test set\ntest_preds = best_pipeline.predict_proba(X_test)[:, 1]\n\n# Save predictions to submission.csv\nsubmission = pd.DataFrame({\"id\": test_data[\"id\"], \"loan_status\": test_preds})\nsubmission.to_csv(\"./working/submission.csv\", index=False)\n", "import pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import train_test_split, GridSearchCV\nfrom sklearn.preprocessing import OneHotEncoder, StandardScaler\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.metrics import roc_auc_score, make_scorer\nimport lightgbm as lgb\n\n# Load data\ntrain_data = pd.read_csv(\"./input/train.csv\")\ntest_data = pd.read_csv(\"./input/test.csv\")\n\n# Separate features and target\nX = train_data.drop([\"loan_status\", \"id\"], axis=1)\ny = train_data[\"loan_status\"]\nX_test = test_data.drop(\"id\", axis=1)\n\n# Define categorical and numerical features\ncategorical_features = X.select_dtypes(include=[\"object\"]).columns.tolist()\nnumerical_features = X.select_dtypes(exclude=[\"object\"]).columns.tolist()\n\n# Create preprocessing pipelines\npreprocessor = ColumnTransformer(\n    transformers=[\n        (\"num\", StandardScaler(), numerical_features),\n        (\"cat\", OneHotEncoder(handle_unknown=\"ignore\"), categorical_features),\n    ]\n)\n\n# Define the model\nmodel = lgb.LGBMClassifier()\n\n# Create and fit the pipeline\npipeline = Pipeline(steps=[(\"preprocessor\", preprocessor), (\"classifier\", model)])\n\n# Parameters grid\nparam_grid = {\n    \"classifier__num_leaves\": [50],\n    \"classifier__max_depth\": [20],\n    \"classifier__learning_rate\": [0.005, 0.01, 0.05],\n    \"classifier__n_estimators\": [200, 500, 1000],\n}\n\n# Grid search with cross-validation\ngrid_search = GridSearchCV(\n    pipeline, param_grid, cv=5, scoring=make_scorer(roc_auc_score, needs_proba=True)\n)\n\n# Fit grid search\ngrid_search.fit(X, y)\n\n# Best model\nbest_pipeline = grid_search.best_estimator_\n\n# Predict on validation set\ny_pred = best_pipeline.predict_proba(X)[:, 1]\n\n# Calculate AUC\nauc_score = roc_auc_score(y, y_pred)\nprint(f\"Best GridSearch AUC: {auc_score}\")\n\n# Predict on test set\ntest_preds = best_pipeline.predict_proba(X_test)[:, 1]\n\n# Save predictions to submission.csv\nsubmission = pd.DataFrame({\"id\": test_data[\"id\"], \"loan_status\": test_preds})\nsubmission.to_csv(\"./working/submission.csv\", index=False)\n", "import pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import train_test_split, GridSearchCV\nfrom sklearn.preprocessing import OneHotEncoder, StandardScaler, PolynomialFeatures\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.metrics import roc_auc_score, make_scorer\nimport lightgbm as lgb\n\n# Load data\ntrain_data = pd.read_csv(\"./input/train.csv\")\ntest_data = pd.read_csv(\"./input/test.csv\")\n\n# Separate features and target\nX = train_data.drop([\"loan_status\", \"id\"], axis=1)\ny = train_data[\"loan_status\"]\nX_test = test_data.drop(\"id\", axis=1)\n\n# Define categorical and numerical features\ncategorical_features = X.select_dtypes(include=[\"object\"]).columns.tolist()\nnumerical_features = X.select_dtypes(exclude=[\"object\"]).columns.tolist()\n\n# Interaction terms - adding polynomial features for top numerical features based on domain knowledge\ntop_numerical_features = numerical_features[\n    :2\n]  # Assume the first two are the top features for simplicity\npoly_transformer = PolynomialFeatures(\n    degree=2, interaction_only=True, include_bias=False\n)\n\n# Update preprocessor to include polynomial features\npreprocessor = ColumnTransformer(\n    transformers=[\n        (\n            \"num\",\n            Pipeline(steps=[(\"scaler\", StandardScaler()), (\"poly\", poly_transformer)]),\n            top_numerical_features,\n        ),\n        (\n            \"num_rest\",\n            StandardScaler(),\n            list(set(numerical_features) - set(top_numerical_features)),\n        ),\n        (\"cat\", OneHotEncoder(handle_unknown=\"ignore\"), categorical_features),\n    ]\n)\n\n# Define the model\nmodel = lgb.LGBMClassifier()\n\n# Create and fit the pipeline\npipeline = Pipeline(steps=[(\"preprocessor\", preprocessor), (\"classifier\", model)])\n\n# Parameters grid\nparam_grid = {\n    \"classifier__num_leaves\": [31, 50, 70],\n    \"classifier__max_depth\": [10, 20, 30],\n}\n\n# Grid search with cross-validation\ngrid_search = GridSearchCV(\n    pipeline, param_grid, cv=5, scoring=make_scorer(roc_auc_score, needs_proba=True)\n)\n\n# Fit grid search\ngrid_search.fit(X, y)\n\n# Best model\nbest_pipeline = grid_search.best_estimator_\n\n# Predict on validation set\ny_pred = best_pipeline.predict_proba(X)[:, 1]\n\n# Calculate AUC\nauc_score = roc_auc_score(y, y_pred)\nprint(f\"Best GridSearch AUC: {auc_score}\")\n\n# Predict on test set\ntest_preds = best_pipeline.predict_proba(X_test)[:, 1]\n\n# Save predictions to submission.csv\nsubmission = pd.DataFrame({\"id\": test_data[\"id\"], \"loan_status\": test_preds})\nsubmission.to_csv(\"./working/submission.csv\", index=False)\n", "import pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import train_test_split, GridSearchCV\nfrom sklearn.preprocessing import OneHotEncoder, StandardScaler\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.metrics import roc_auc_score, make_scorer\nimport lightgbm as lgb\n\n# Load data\ntrain_data = pd.read_csv(\"./input/train.csv\")\ntest_data = pd.read_csv(\"./input/test.csv\")\n\n# Separate features and target\nX = train_data.drop([\"loan_status\", \"id\"], axis=1)\ny = train_data[\"loan_status\"]\nX_test = test_data.drop(\"id\", axis=1)\n\n# Define categorical and numerical features\ncategorical_features = X.select_dtypes(include=[\"object\"]).columns.tolist()\nnumerical_features = X.select_dtypes(exclude=[\"object\"]).columns.tolist()\n\n# Preprocessor for the pipeline\npreprocessor = ColumnTransformer(\n    transformers=[\n        (\"num\", StandardScaler(), numerical_features),\n        (\"cat\", OneHotEncoder(handle_unknown=\"ignore\"), categorical_features),\n    ]\n)\n\n# Initial model to determine feature importance\ninitial_model = lgb.LGBMClassifier()\ninitial_pipeline = Pipeline(\n    steps=[(\"preprocessor\", preprocessor), (\"classifier\", initial_model)]\n)\ninitial_pipeline.fit(X, y)\n\n# Get feature importances\nfeature_importances = initial_pipeline.named_steps[\"classifier\"].feature_importances_\nfeature_names = np.concatenate(\n    [\n        numerical_features,\n        initial_pipeline.named_steps[\"preprocessor\"]\n        .transformers_[1][1]\n        .get_feature_names_out(),\n    ]\n)\n\n# Select top 50% most important features\nimportant_indices = np.argsort(feature_importances)[-len(feature_importances) // 2 :]\nimportant_features = feature_names[important_indices]\n\n# Update preprocessor to only use selected features\nimportant_numerical = list(set(numerical_features) & set(important_features))\nimportant_categorical = list(\n    set(feature_names[len(numerical_features) :]) & set(important_features)\n)\n\nupdated_preprocessor = ColumnTransformer(\n    transformers=[\n        (\"num\", StandardScaler(), important_numerical),\n        (\"cat\", OneHotEncoder(handle_unknown=\"ignore\"), important_categorical),\n    ]\n)\n\n# Define the final model\nfinal_model = lgb.LGBMClassifier()\n\n# Create and fit the pipeline with only important features\nfinal_pipeline = Pipeline(\n    steps=[(\"preprocessor\", updated_preprocessor), (\"classifier\", final_model)]\n)\nfinal_pipeline.fit(X, y)\n\n# Predict on validation set\ny_pred = final_pipeline.predict_proba(X)[:, 1]\n\n# Calculate AUC\nauc_score = roc_auc_score(y, y_pred)\nprint(f\"Final Model AUC with Feature Selection: {auc_score}\")\n\n# Predict on test set\ntest_preds = final_pipeline.predict_proba(X_test)[:, 1]\n\n# Save predictions to submission.csv\nsubmission = pd.DataFrame({\"id\": test_data[\"id\"], \"loan_status\": test_preds})\nsubmission.to_csv(\"./working/submission.csv\", index=False)\n"], "term_out": ["AUC Score: 0.9039025741137604\nExecution time: 7 seconds seconds (time limit is an hour).", "Mean AUC Score: 0.9334881087809469\nExecution time: 19 seconds seconds (time limit is an hour).", "Validation AUC: 0.9001836804316595\nExecution time: a minute seconds (time limit is an hour).", "Validation AUC: 0.8372036322051598\nExecution time: a moment seconds (time limit is an hour).", "[LightGBM] [Info] Number of positive: 6708, number of negative: 40208\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.003033 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 902\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142979 -> initscore=-1.790765\n[LightGBM] [Info] Start training from score -1.790765\nValidation AUC: 0.9587781791712949\nExecution time: 3 seconds seconds (time limit is an hour).", "[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001321 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 901\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001832 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 906\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001136 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 902\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001132 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 903\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001487 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `fo\n ... [20622 characters truncated] ... \nin set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001067 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 902\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001097 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 903\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001098 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 898\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 8350, number of negative: 50295\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001230 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 902\n[LightGBM] [Info] Number of data points in the train set: 58645, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\nBest GridSearch AUC: 0.9803949393190952\nExecution time: 48 seconds seconds (time limit is an hour).", "Traceback (most recent call last):\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/pandas/core/indexes/base.py\", line 3791, in get_loc\n    return self._engine.get_loc(casted_key)\n  File \"index.pyx\", line 152, in pandas._libs.index.IndexEngine.get_loc\n  File \"index.pyx\", line 181, in pandas._libs.index.IndexEngine.get_loc\n  File \"pandas/_libs/hashtable_class_helper.pxi\", line 7080, in pandas._libs.hashtable.PyObjectHashTable.get_item\n  File \"pandas/_libs/hashtable_class_helper.pxi\", line 7088, in pandas._libs.hashtable.PyObjectHashTable.get_item\nKeyError: 'feature1'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"runfile.py\", line 24, in <module>\n    X[\"interaction_term\"] = X[\"feature1\"] * X[\"feature2\"]  # Hypothetical interaction\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/pandas/core/frame.py\", line 3893, in __getitem__\n    indexer = self.columns.get_loc(key)\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/pandas/core/indexes/base.py\", line 3798, in get_loc\n    raise KeyError(key) from err\nKeyError: 'feature1'\nExecution time: a moment seconds (time limit is an hour).", "[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.002376 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 901\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001426 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 906\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0.001862 seconds.\nYou can set `force_col_wise=true` to remove the overhead.\n[LightGBM] [Info] Total Bins 902\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001246 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 903\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0.001504 seconds.\nYou can set `force_col_wise=true` to remove the overhead.\n[LightGBM] [Info] Total Bins 898\n[LightGBM] [Info] Number of data points in the train set: 46916, number of \n ... [20354 characters truncated] ... \nain set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.000961 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 902\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001825 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 903\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.000798 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 898\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 8350, number of negative: 50295\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001251 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 902\n[LightGBM] [Info] Number of data points in the train set: 58645, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\nBest GridSearch AUC: 0.9803401333330952\nExecution time: 4 minutes seconds (time limit is an hour).", "[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0.003170 seconds.\nYou can set `force_col_wise=true` to remove the overhead.\n[LightGBM] [Info] Total Bins 1156\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 27\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.002070 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 1161\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 27\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001270 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 1157\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 27\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.000985 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 1158\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 27\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001553 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 1153\n[Light\n ... [20540 characters truncated] ... \net: 46916, number of used features: 27\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001258 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 1157\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 27\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001162 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 1158\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 27\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 6680, number of negative: 40236\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001125 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 1153\n[LightGBM] [Info] Number of data points in the train set: 46916, number of used features: 27\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\n[LightGBM] [Info] Number of positive: 8350, number of negative: 50295\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001320 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 1157\n[LightGBM] [Info] Number of data points in the train set: 58645, number of used features: 27\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\nBest GridSearch AUC: 0.9814987073273673\nExecution time: 42 seconds seconds (time limit is an hour).", "[LightGBM] [Info] Number of positive: 8350, number of negative: 50295\n[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001756 seconds.\nYou can set `force_row_wise=true` to remove the overhead.\nAnd if memory is not enough, you can set `force_col_wise=true`.\n[LightGBM] [Info] Total Bins 902\n[LightGBM] [Info] Number of data points in the train set: 58645, number of used features: 26\n[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.142382 -> initscore=-1.795644\n[LightGBM] [Info] Start training from score -1.795644\nTraceback (most recent call last):\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/pandas/core/indexes/base.py\", line 3791, in get_loc\n    return self._engine.get_loc(casted_key)\n  File \"index.pyx\", line 152, in pandas._libs.index.IndexEngine.get_loc\n  File \"index.pyx\", line 181, in pandas._libs.index.IndexEngine.get_loc\n  File \"pandas/_libs/hashtable_class_helper.pxi\", line 7080, in pandas._libs.hashtable.PyObjectHashTable.get_item\n  File \"pandas/_libs/hashtable_class_helper.pxi\", line 7088, in pandas._libs.hashtable.PyObjectHashTable.get_item\nKeyError: 'loan_intent_HOMEIMPROVEMENT'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/sklearn/utils/__init__.py\", line 448, in _get_column_indices\n    col_idx = all_columns.get_loc(col)\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/pandas/core/indexes/base.py\", line 3798, in get_loc\n    raise KeyError(key) from err\nKeyError: 'loan_intent_HOMEIMPROVEMENT'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"runfile.py\", line 73, in <module>\n    final_pipeline.fit(X, y)\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/sklearn/pipeline.py\", line 401, in fit\n    Xt = self._fit(X, y, **fit_params_steps)\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/sklearn/pipeline.py\", line 359, in _fit\n    X, fitted_transformer = fit_transform_one_cached(\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/joblib/memory.py\", line 312, in __call__\n    return self.func(*args, **kwargs)\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/sklearn/pipeline.py\", line 893, in _fit_transform_one\n    res = transformer.fit_transform(X, y, **fit_params)\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/sklearn/utils/_set_output.py\", line 140, in wrapped\n    data_to_wrap = f(self, X, *args, **kwargs)\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/sklearn/compose/_column_transformer.py\", line 724, in fit_transform\n    self._validate_column_callables(X)\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/sklearn/compose/_column_transformer.py\", line 426, in _validate_column_callables\n    transformer_to_input_indices[name] = _get_column_indices(X, columns)\n  File \"/Users/dex/Work/wecoai/aideml/.venv/lib/python3.10/site-packages/sklearn/utils/__init__.py\", line 456, in _get_column_indices\n    raise ValueError(\"A given column is not a column of the dataframe\") from e\nValueError: A given column is not a column of the dataframe\nExecution time: 2 seconds seconds (time limit is an hour)."], "analysis": ["The code execution successfully computed the AUC score for the loan approval prediction model, achieving an AUC of 0.9039. This indicates a high predictive performance of the model in distinguishing between the classes. The model was trained using a combination of numerical and categorical preprocessing followed by logistic regression.", "The code successfully trained a Random Forest model for predicting loan approval status with a mean AUC score of 0.9335 on cross-validation. This indicates a strong predictive performance. The model was also successfully applied to the test dataset, and predictions were saved to a CSV file.", "The implementation successfully trained an SVM model using a pipeline that included preprocessing steps for both numerical and categorical features. The model achieved a validation AUC of 0.9002, which indicates a high predictive performance on the validation set. The predictions were then made on the test data and saved for submission.", "The code successfully trains a Decision Tree Classifier to predict loan approval status. It processes the data using a pipeline that includes preprocessing steps for both numerical and categorical features. The model achieves a Validation AUC of 0.8372, indicating a good predictive performance.", "The script successfully trained a LightGBM model for predicting loan approval status, achieving a high AUC score of 0.9588 on the validation set. This indicates a strong predictive performance of the model. The use of preprocessing pipelines for handling categorical and numerical data effectively contributed to the model's performance.", "The model training and evaluation pipeline executed successfully, achieving a high AUC score of 0.9804 on the training data. This indicates an excellent predictive performance of the model, although it might suggest overfitting given the exceptionally high score. The use of LightGBM along with preprocessing steps including scaling and one-hot encoding appears to be effective for this task.", "The script failed due to a KeyError: 'feature1'. This error occurred because the script attempts to access columns 'feature1' and 'feature2' which do not exist in the dataset. To fix this bug, the feature names should be corrected to match the actual column names present in the dataset. Additionally, verify that the interaction term calculation is appropriate for the features in question.", "The script successfully executed the training and evaluation of a LightGBM model for loan status prediction. The best model achieved a high AUC score of 0.98034 on the validation set, indicating excellent performance in distinguishing between the classes. The use of GridSearchCV ensured optimal hyperparameter tuning, and the preprocessing pipeline effectively handled both numerical and categorical data.", "The output log indicates that the model training and validation were successful, achieving a high AUC score of 0.9815 on the training data. The grid search was effectively executed with different hyperparameters, and the model was trained using LightGBM with polynomial features preprocessing.", "The code failed due to a KeyError when attempting to use the column 'loan_intent_HOMEIMPROVEMENT' which was not found in the DataFrame. This error occurred because the script attempted to use a column that was not present or was incorrectly labeled in the DataFrame. To fix this issue, ensure that all specified columns exist in the DataFrame or correct any misspellings in the column names."], "exp_name": "2-gpt4_seed1", "metrics": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+
+let lastClick = 0;
+let firstFrameTime = undefined;
+
+let nodes = [];
+let edges = [];
+
+let lastScrollPos = 0;
+
+setup = () => {
+  canvas = createCanvas(...updateTargetDims());
+};
+
+class Node {
+  x;
+  y;
+  size;
+  xT;
+  yT;
+  xB;
+  yB;
+  treeInd;
+  color;
+  relSize;
+  animationStart = Number.MAX_VALUE;
+  animationProgress = 0;
+  isStatic = false;
+  hasChildren = false;
+  isRootNode = true;
+  isStarred = false;
+  selected = false;
+  renderSize = 10;
+  edges = [];
+  bgCol;
+
+  constructor(x, y, relSize, treeInd) {
+    const minSize = 35;
+    const maxSize = 60;
+
+    const maxColor = 10;
+    const minColor = 125;
+
+    this.relSize = relSize;
+    this.treeInd = treeInd;
+    this.size = minSize + (maxSize - minSize) * relSize;
+    this.color = minColor + (maxColor - minColor) * relSize;
+    this.bgCol = Math.round(Math.max(this.color / 2, 0));
+
+    this.x = x;
+    this.y = y;
+    this.xT = x;
+    this.yT = y - this.size / 2;
+    this.xB = x;
+    this.yB = y + this.size / 2;
+
+    nodes.push(this);
+  }
+
+  startAnimation = (offset = 0) => {
+    if (this.animationStart == Number.MAX_VALUE)
+      this.animationStart = globalTime + offset;
+  };
+
+  child = (node) => {
+    let edge = new Edge(this, node);
+    this.edges.push(edge);
+    edges.push(edge);
+    this.hasChildren = true;
+    node.isRootNode = false;
+    return node;
+  };
+
+  render = () => {
+    if (globalTime - this.animationStart < 0) return;
+
+    const mouseXlocalCoords = (mouseX - width / 2) / scaleFactor;
+    const mouseYlocalCoords = (mouseY - height / 2) / scaleFactor;
+    const isMouseOver =
+      dist(mouseXlocalCoords, mouseYlocalCoords, this.x, this.y) <
+      this.renderSize / 1.5;
+    if (isMouseOver) cursor(HAND);
+    if (isMouseOver && mouseIsPressed) {
+      nodes.forEach((n) => (n.selected = false));
+      this.selected = true;
+      setCodeAndPlan(
+        treeStructData.code[this.treeInd],
+        treeStructData.plan[this.treeInd],
+      );
+      manualSelection = true;
+    }
+
+    this.renderSize = this.size;
+    if (!this.isStatic) {
+      this.animationProgress = animEase(
+        (globalTime - this.animationStart) / 1000,
+      );
+      if (this.animationProgress >= 1) {
+        this.isStatic = true;
+      } else {
+        this.renderSize =
+          this.size *
+          (0.8 +
+            0.2 *
+              (-3.33 * this.animationProgress ** 2 +
+                4.33 * this.animationProgress));
+      }
+    }
+
+    fill(this.color);
+    if (this.selected) {
+      fill(accentCol);
+    }
+
+    noStroke();
+    square(
+      this.x - this.renderSize / 2,
+      this.y - this.renderSize / 2,
+      this.renderSize,
+      10,
+    );
+
+    noStroke();
+    textAlign(CENTER, CENTER);
+    textSize(this.renderSize / 2);
+    fill(255);
+    // fill(lerpColor(color(accentCol), color(255), this.animationProgress))
+    text("{ }", this.x, this.y - 1);
+    // DEBUG PRINT:
+    // text(round(this.relSize, 2), this.x, this.y - 1)
+    // text(this.treeInd, this.x, this.y + 15)
+
+    const dotAnimThreshold = 0.85;
+    if (this.isStarred && this.animationProgress >= dotAnimThreshold) {
+      let dotAnimProgress =
+        (this.animationProgress - dotAnimThreshold) / (1 - dotAnimThreshold);
+      textSize(
+        ((-3.33 * dotAnimProgress ** 2 + 4.33 * dotAnimProgress) *
+          this.renderSize) /
+          2,
+      );
+      if (this.selected) {
+        fill(0);
+        stroke(0);
+      } else {
+        fill(accentCol);
+        stroke(accentCol);
+      }
+      strokeWeight((-(dotAnimProgress ** 2) + dotAnimProgress) * 2);
+      text("*", this.x + 20, this.y - 11);
+      noStroke();
+    }
+
+    if (!this.isStatic) {
+      fill(bgCol);
+      const progressAnimBaseSize = this.renderSize + 5;
+      rect(
+        this.x - progressAnimBaseSize / 2,
+        this.y -
+          progressAnimBaseSize / 2 +
+          progressAnimBaseSize * this.animationProgress,
+        progressAnimBaseSize,
+        progressAnimBaseSize * (1 - this.animationProgress),
+      );
+    }
+    if (this.animationProgress >= 0.9) {
+      this.edges
+        .sort((a, b) => a.color() - b.color())
+        .forEach((e, i) => {
+          e.startAnimation((i / this.edges.length) ** 2 * 1000);
+        });
+    }
+  };
+}
+
+class Edge {
+  nodeT;
+  nodeB;
+  animX = 0;
+  animY = 0;
+  animationStart = Number.MAX_VALUE;
+  animationProgress = 0;
+  isStatic = false;
+  weight = 0;
+
+  constructor(nodeT, nodeB) {
+    this.nodeT = nodeT;
+    this.nodeB = nodeB;
+    this.weight = 2 + nodeB.relSize * 1;
+  }
+
+  color = () => this.nodeB.color;
+
+  startAnimation = (offset = 0) => {
+    if (this.animationStart == Number.MAX_VALUE)
+      this.animationStart = globalTime + offset;
+  };
+
+  render = () => {
+    if (globalTime - this.animationStart < 0) return;
+
+    if (!this.isStatic) {
+      this.animationProgress = animEase(
+        (globalTime - this.animationStart) / 1000,
+      );
+      if (this.animationProgress >= 1) {
+        this.isStatic = true;
+        this.animX = this.nodeB.xT;
+        this.animY = this.nodeB.yT;
+      } else {
+        this.animX = bezierPoint(
+          this.nodeT.xB,
+          this.nodeT.xB,
+          this.nodeB.xT,
+          this.nodeB.xT,
+          this.animationProgress,
+        );
+
+        this.animY = bezierPoint(
+          this.nodeT.yB,
+          (this.nodeT.yB + this.nodeB.yT) / 2,
+          (this.nodeT.yB + this.nodeB.yT) / 2,
+          this.nodeB.yT,
+          this.animationProgress,
+        );
+      }
+    }
+    if (this.animationProgress >= 0.97) {
+      this.nodeB.startAnimation();
+    }
+
+    strokeWeight(this.weight);
+    noFill();
+    stroke(
+      lerpColor(color(bgCol), color(accentCol), this.nodeB.relSize * 1 + 0.7),
+    );
+    bezier(
+      this.nodeT.xB,
+      this.nodeT.yB,
+      this.nodeT.xB,
+      (this.nodeT.yB + this.nodeB.yT) / 2,
+      this.animX,
+      (this.nodeT.yB + this.nodeB.yT) / 2,
+      this.animX,
+      this.animY,
+    );
+  };
+}
+
+draw = () => {
+  cursor(ARROW);
+  frameRate(120);
+  if (!firstFrameTime && frameCount <= 1) {
+    firstFrameTime = millis();
+  }
+  // ---- update global animation state ----
+  const initialSpeedScalingEaseIO =
+    (cos(min((millis() - firstFrameTime) / 8000, 1.0) * PI) + 1) / 2;
+  const initialSpeedScalingEase =
+    (cos(min((millis() - firstFrameTime) / 8000, 1.0) ** (1 / 2) * PI) + 1) / 2;
+  const initAnimationSpeedFactor = 1.0 - 0.4 * initialSpeedScalingEaseIO;
+  // update global scaling-aware clock
+  globalTime += globalAnimSpeed * initAnimationSpeedFactor * deltaTime;
+
+  if (nodes.length == 0) {
+    const spacingHeight = height * 1.3;
+    const spacingWidth = width * 1.3;
+    treeStructData.layout.forEach((lay, index) => {
+      new Node(
+        spacingWidth * lay[0] - spacingWidth / 2,
+        20 + spacingHeight * lay[1] - spacingHeight / 2,
+        1 - treeStructData.metrics[index],
+        index,
+      );
+    });
+    treeStructData.edges.forEach((ind) => {
+      nodes[ind[0]].child(nodes[ind[1]]);
+    });
+    nodes.forEach((n) => {
+      if (n.isRootNode) n.startAnimation();
+    });
+    nodes[0].selected = true;
+    setCodeAndPlan(
+      treeStructData.code[0],
+      treeStructData.plan[0],
+    )
+  }
+
+  const staticNodes = nodes.filter(
+    (n) => n.isStatic || n.animationProgress >= 0.7,
+  );
+  if (staticNodes.length > 0) {
+    const largestNode = staticNodes.reduce((prev, current) =>
+      prev.relSize > current.relSize ? prev : current,
+    );
+    if (!manualSelection) {
+      if (!largestNode.selected) {
+        setCodeAndPlan(
+          treeStructData.code[largestNode.treeInd],
+          treeStructData.plan[largestNode.treeInd],
+        );
+      }
+      staticNodes.forEach((node) => {
+        node.selected = node === largestNode;
+      });
+    }
+  }
+  background(bgCol);
+  // global animation transforms
+  translate(width / 2, height / 2);
+  scale(scaleFactor);
+
+  
+  // ---- fg render ----
+  edges.forEach((e) => e.render());
+  nodes.forEach((n) => n.render());
+  
+};
+
+    </script>
+    <title>AIDE Run Visualization</title>
+    <style>
+      body,
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        overflow: scroll;
+      }
+      body {
+        background-color: #f2f0e7;
+      }
+      canvas {
+        float: left;
+        height: 100vh;
+        width: 40vw;
+      }
+      #text-container {
+        float: right;
+        height: 100vh;
+        width: 50vw;
+        background-color: #282c34;
+      }
+      #plan {
+        /* border-left: 2px solid #282c34; */
+        background-color: #282c34;
+        color: #f2f0e7;
+        min-height: 5rem;
+        padding: 1em 0 1em 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <pre
+      id="text-container"
+    ><div id="plan"></div><hr><code id="code" class="language-python"></code></pre>
+  </body>
+</html>
