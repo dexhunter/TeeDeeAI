@@ -1,13 +1,15 @@
 import os
-from dstack_sdk import AsyncTappdClient, DeriveKeyResponse, TdxQuoteResponse
-from fastapi import FastAPI
-import gradio as gr
-from fastapi.middleware.cors import CORSMiddleware
-import numpy as np
-from sklearn.linear_model import LinearRegression
-import pandas as pd
 import asyncio
 import uvicorn
+import gradio as gr
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+from dstack_sdk import AsyncTappdClient, DeriveKeyResponse, TdxQuoteResponse
 
 def create_app():
     app = FastAPI()
@@ -24,28 +26,24 @@ def create_app():
     # Initialize ML model
     model = LinearRegression()
     
-    # New endpoints for derivekey and tdxquote
-    @app.get("/")
-    async def root():
-        return {"message": "Welcome! Access the Gradio app at '/gradio', and use '/derivekey' or '/tdxquote' for API calls."}
-
-    @app.get("/derivekey")
-    async def derivekey():
-        client = AsyncTappdClient()
-        deriveKey = await client.derive_key('/', 'test')
-        assert isinstance(deriveKey, DeriveKeyResponse)
-        asBytes = deriveKey.toBytes()
-        assert isinstance(asBytes, bytes)
-        limitedSize = deriveKey.toBytes(32)
-        return {"deriveKey": asBytes.hex(), "derive_32bytes": limitedSize.hex()}
+    # # Direct API endpoints
+    # @app.get("/api/derivekey/{subject}")
+    # async def derivekey(subject: str):
+    #     client = AsyncTappdClient()
+    #     deriveKey = await client.derive_key('/', subject)
+    #     assert isinstance(deriveKey, DeriveKeyResponse)
+    #     asBytes = deriveKey.toBytes()
+    #     assert isinstance(asBytes, bytes)
+    #     limitedSize = deriveKey.toBytes(32)
+    #     return {"deriveKey": asBytes.hex(), "derive_32bytes": limitedSize.hex()}
         
-    @app.get("/tdxquote")
-    async def tdxquote():
-        client = AsyncTappdClient()
-        tdxQuote = await client.tdx_quote('test')
-        assert isinstance(tdxQuote, TdxQuoteResponse)
-        return {"tdxQuote": tdxQuote}
-
+    # @app.get("/api/tdxquote/{subject}")
+    # async def tdxquote(subject: str):
+    #     client = AsyncTappdClient()
+    #     tdxQuote = await client.tdx_quote(subject)
+    #     assert isinstance(tdxQuote, TdxQuoteResponse)
+    #     return {"tdxQuote": str(tdxQuote)}
+    
     # ML functions
     def train_model(file, target_column):
         try:
@@ -65,9 +63,17 @@ def create_app():
         except Exception as e:
             return f"Error making predictions: {str(e)}"
         
+    # Gradio Interface
     def create_interface():
-        with gr.Blocks(title="ML Model and API Testing Interface") as interface:
-            gr.Markdown("# ML Model and API Testing Interface")
+        with gr.Blocks(title="FuncTee") as interface:
+            gr.Markdown("""
+                # FuncTee
+                    
+                FuncTee is the builder's hub, where data scientists and AI developers 
+                can create, test, and upload their AI models. With intuitive tools 
+                and support, FuncTee makes it easy for creators to transform their 
+                expertise into functional, deployable models ready for integration.
+            """)
             
             with gr.Tab("ML Model"):
                 with gr.Row():
@@ -95,26 +101,26 @@ def create_app():
             
             with gr.Tab("Derive Key"):
                 with gr.Column():
-                    path_input = gr.Textbox(label="Path", value="/")
-                    test_param_derive = gr.Textbox(label="Test Parameter", value="test")
+                    path_input = gr.Textbox(label="Path", placeholder="/")
+                    test_param_derive = gr.Textbox(label="Test Parameter", placeholder="test")
                     derive_button = gr.Button("Get Derive Key")
                     derive_output = gr.Textbox(label="Derive Key Result")
                 
                 derive_button.click(
-                    derive_key_wrapper,
+                    fn=derive_key_wrapper,
                     inputs=[path_input, test_param_derive],
                     outputs=derive_output
                 )
             
             with gr.Tab("TDX Quote"):
                 with gr.Column():
-                    test_param_tdx = gr.Textbox(label="Test Parameter", value="test")
+                    tdx_input = gr.Textbox(label="Subject", placeholder="test")
                     tdx_button = gr.Button("Get TDX Quote")
                     tdx_output = gr.Textbox(label="TDX Quote Result")
                 
                 tdx_button.click(
                     tdx_quote_wrapper,
-                    inputs=[test_param_tdx],
+                    inputs=[tdx_input],
                     outputs=tdx_output
                 )
         
@@ -129,7 +135,7 @@ def create_app():
     
     # Async functions for Gradio
     async def get_derive_key(path, test_param):
-        client = AsyncTappdClient()
+        client = AsyncTappdClient(endpoint="http://localhost:8090")  # or whatever your Tappd server URL is
         deriveKey = await client.derive_key(path, test_param)
         assert isinstance(deriveKey, DeriveKeyResponse)
         asBytes = deriveKey.toBytes()
@@ -137,14 +143,14 @@ def create_app():
         return f"DeriveKey: {asBytes.hex()}\nDerive 32bytes: {limitedSize.hex()}"
 
     async def get_tdx_quote(test_param):
-        client = AsyncTappdClient()
+        client = AsyncTappdClient(endpoint="http://localhost:8090")  # or whatever your Tappd server URL is
         tdxQuote = await client.tdx_quote(test_param)
         assert isinstance(tdxQuote, TdxQuoteResponse)
         return f"TDX Quote: {tdxQuote}"
     
-    # Mount Gradio app to FastAPI at /gradio
+    # Create and mount Gradio interface
     interface = create_interface()
-    app = gr.mount_gradio_app(app, interface, path="/gradio")
+    app = gr.mount_gradio_app(app, interface, path="/")
     
     return app
 
