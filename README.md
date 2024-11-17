@@ -45,3 +45,5 @@ source .venv/bin/activate
 uv sync
 python FuncTee/app.py
 ```
+
+FuncTee will be available at http://localhost:8000/
