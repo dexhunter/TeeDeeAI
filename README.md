@@ -1,11 +1,13 @@
 # TeeDeeAI
 FuncTee &amp; DataDee
 
-## FuncTee
+# FuncTee
 FuncTee is the builder’s hub, where data scientists and AI developers can create, test, and upload their AI models. With intuitive tools and support, FuncTee makes it easy for creators to transform their expertise into functional, deployable models ready for integration.
 
-## DataDee
+# DataDee
 DataDee is the marketplace that showcases all the models uploaded on FuncTee. Users can browse, evaluate, and purchase AI solutions tailored to their needs. With a diverse catalog of innovative models, DataDee ensures accessibility and flexibility for businesses and individuals looking to leverage the power of AI.
+
+---
 
 ## Workflow
 
@@ -42,7 +44,8 @@ docker run --rm -p 8090:8090 phalanetwork/tappd-simulator:latest
 ```bash
 uv venv
 source .venv/bin/activate
-uv sync
+uv sync 
+# uv pip install -r requirements.txt
 python FuncTee/app.py
 ```
 
