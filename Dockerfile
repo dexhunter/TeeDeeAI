@@ -45,9 +45,9 @@ USER appuser
 COPY . .
 
 # Expose the port that the application listens on.
-EXPOSE 3000
-ENV PORT=3000
+EXPOSE 8000
+ENV PORT=8000
 ENV HOSTNAME="0.0.0.0"
 ENV DSTACK_SIMULATOR_ENDPOINT="http://host.docker.internal:8090"
 # Run the application.
-CMD ["uvicorn", "app:app", "--host=0.0.0.0", "--port=3000"]
+CMD ["uvicorn", "FuncTee.app:app", "--host=0.0.0.0", "--port=8000"]
