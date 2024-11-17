@@ -1,3 +1,7 @@
 dstack-sdk==0.1.2
 asyncio>=3.4.3
 fastapi==0.111.0
+gradio
+pandas
+numpy
+scikit-learn

@@ -27,3 +27,14 @@ Seamless Integration: Models flow from FuncTee to DataDee automatically.
 Revenue Sharing: Transparent revenue split between creators and the platform.
 Community Engagement: Offer forums, tutorials, and ratings to build trust and collaboration.
 Analytics & Insights: Provide data for creators on model performance and user engagement.
+
+
+## How to Run
+
+Use uv to sync the project.
+```bash
+uv venv
+source .venv/bin/activate
+uv sync
+python FuncTee/app.py
+```
