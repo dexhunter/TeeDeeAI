@@ -1,0 +1,7 @@
+[project]
+name = "TeeDeeAI"
+version = "0.1.0"
+description = "FuncTee & DataDee"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
